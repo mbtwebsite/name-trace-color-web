@@ -395,7 +395,12 @@
                             value="{{ entered_name }}"
                         >
 
-                        <div class="cf-turnstile" data-sitekey="0x4AAAAAAC1CCmRmusRfWr9u" data-size="invisible"></div>
+                        <div
+                            class="cf-turnstile"
+                            data-sitekey="0x4AAAAAAC1CCmRmusRfWr9u"
+                            data-size="invisible"
+                            data-callback="onTurnstileSuccess"
+                        ></div>
 
                         <button type="submit" id="submit-btn">
                             Generate
@@ -446,7 +451,7 @@
                             <p>This worksheet format includes a large write word, a tracing section, and an outline coloring section.</p>
                             <img
                                 src="/static/example-name-trace.png"
-                                alt="Example worksheet preview"
+                                alt="Example name or word worksheet preview"
                             >
                         </div>
                     {% endif %}
@@ -466,8 +471,36 @@
     </footer>
 
     <script>
-        document.getElementById("form").addEventListener("submit", function() {
+        let turnstileReadyToSubmit = false;
+
+        function onTurnstileSuccess(token) {
+            if (!turnstileReadyToSubmit) return;
+
+            const form = document.getElementById("form");
             const btn = document.getElementById("submit-btn");
+            btn.innerText = "Generating...";
+            form.submit();
+        }
+
+        document.getElementById("form").addEventListener("submit", function(e) {
+            const widget = document.querySelector(".cf-turnstile");
+            const btn = document.getElementById("submit-btn");
+
+            if (!widget) {
+                btn.innerText = "Generating...";
+                return;
+            }
+
+            const existingToken = document.querySelector('input[name="cf-turnstile-response"]');
+
+            if (!existingToken || !existingToken.value) {
+                e.preventDefault();
+                turnstileReadyToSubmit = true;
+                btn.innerText = "Checking...";
+                turnstile.execute(widget);
+                return;
+            }
+
             btn.innerText = "Generating...";
         });
     </script>
